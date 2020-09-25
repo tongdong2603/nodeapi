@@ -1,6 +1,21 @@
 const User = require("../models/User");
 const Deck = require("../models/Deck");
 
+const { JWT_SECRET } = require("../configs/index");
+const JWT = require("jsonwebtoken");
+
+const encodedToken = userID => {
+  return JWT.sign(
+    {
+      iss: "Tong Dong",
+      sub: userID,
+      iat: new Date().getTime(),
+      exp: new Date().setDate(new Date().getDate() + 3)
+    },
+    JWT_SECRET
+  );
+};
+
 // Get all user
 const allUser = async (req, res, next) => {
   const users = await User.find({});
@@ -38,6 +53,41 @@ const replaceUser = async (req, res, next) => {
   return res.status(200).json({
     success: true
   });
+};
+
+// sign up
+const signUp = async (req, res, next) => {
+  const { firstName, lastName, email, password } = req.body;
+
+  const mailDuplicate = await User.findOne({ email });
+  if (mailDuplicate) {
+    return res
+      .status(403)
+      .json({ error: { message: "Email is already in use" } });
+  }
+
+  // Create new User
+  const newUser = new User({ firstName, lastName, email, password });
+  await newUser.save();
+
+  // Encode
+  const token = encodedToken(newUser._id);
+
+  res.setHeader("Authorization", token);
+  return res.status(201).json({ success: true });
+};
+// sign in
+const signIn = async (req, res, next) => {
+  // Assign Token
+  console.log(req.user)
+  const token = encodedToken(req.user._id);
+  console.log(token);
+  res.setHeader("Authorization", token);
+  return res.status(200).json({ success: true });
+};
+// Secrets
+const secret = async (req, res, next) => {
+  return res.status(200).json({ resources: true });
 };
 
 // Patch user Info
@@ -91,5 +141,8 @@ module.exports = {
   replaceUser,
   updateUser,
   postUserDeck,
-  getUserDecks
+  getUserDecks,
+  signUp,
+  signIn,
+  secret
 };

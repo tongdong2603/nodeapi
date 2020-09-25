@@ -1,7 +1,8 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const logger = require("morgan");
+const logger = require("morgan"); // log ra những request gửi đến server
 const mongoClient = require("mongoose");
+require('dotenv').config()
 
 // setup connect to mongoDB
 mongoClient
